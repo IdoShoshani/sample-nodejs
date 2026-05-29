@@ -21,3 +21,12 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+
+  sast:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Semgrep (fail on errors/critical)
+        run: semgrep scan --config=auto --error --severity=ERROR
