@@ -59,7 +59,7 @@ jobs:
           load: true
           tags: idoshoshani123/sample-nodejs:${{ steps.version.outputs.tag }}
       - name: Trivy scan (block HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: idoshoshani123/sample-nodejs:${{ steps.version.outputs.tag }}
           severity: HIGH,CRITICAL
