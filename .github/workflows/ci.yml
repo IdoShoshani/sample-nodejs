@@ -76,3 +76,29 @@ jobs:
         run: |
           git tag "v${{ steps.version.outputs.tag }}"
           git push origin "v${{ steps.version.outputs.tag }}"
+
+  promote:
+    needs: release
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitOps repo
+        uses: actions/checkout@v4
+        with:
+          repository: IdoShoshani/devops-challenge-gitops
+          token: ${{ secrets.GITOPS_PAT }}
+          path: gitops
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+      - name: Bump image tag
+        env:
+          TAG: ${{ needs.release.outputs.image_tag }}
+        run: |
+          cd gitops
+          yq -i '.image.tag = strenv(TAG)' apps/sample-nodejs/values.yaml
+          git config user.name "ci-bot"
+          git config user.email "ci-bot@users.noreply.github.com"
+          git commit -am "deploy: bump sample-nodejs image to ${TAG}"
+          git push
