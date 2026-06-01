@@ -87,6 +87,10 @@ Required repo secrets:
 - `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN` — push the image.
 - `GITOPS_PAT` — fine-grained PAT scoped to `devops-challenge-gitops`, Contents: Read & write. Used by `promote` to commit the image-tag bump.
 
+### Versioning
+
+Each image tag is `<package.json#version>-<GITHUB_RUN_NUMBER>`, e.g. `1.0.0-12`. A matching git tag `v<image-tag>` is pushed on every successful `release`. **For a minor/major release, bump `version` in `package.json`** in a PR; the run number resets nothing and continues incrementing, so tags stay monotonically ordered.
+
 ### Deviations from the original challenge spec / plan
 
 - **ESLint flat config (`eslint.config.js`) instead of `.eslintrc.json`.** ESLint `^9.9.0` (which the plan pins) does **not** read legacy `.eslintrc.json` by default. Using flat config is the supported path for ESLint 9+.
