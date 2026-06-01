@@ -16,8 +16,6 @@ const helloWorldCounter = new promClient.Counter({
 });
 register.registerMetric(helloWorldCounter);
 
-
-
 // Define routes
 app.get('/my-app', (req, res) => {
     helloWorldCounter.inc();

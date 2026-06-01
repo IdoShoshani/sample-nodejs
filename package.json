@@ -1,16 +1,33 @@
 {
   "name": "sample-nodejs",
   "version": "1.0.0",
+  "private": true,
+  "description": "Sample Node.js app (forked) for the DevOps/DevSecOps challenge",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "test": "node --test",
     "lint": "eslint ."
   },
-  "keywords": [],
-  "author": "",
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IdoShoshani/sample-nodejs.git"
+  },
+  "keywords": [
+    "express",
+    "kubernetes",
+    "docker",
+    "devops",
+    "devsecops",
+    "gitops",
+    "argocd",
+    "prometheus"
+  ],
+  "author": "Ido Shoshani",
   "license": "ISC",
-  "description": "Sample Node.js app (forked) for the DevOps/DevSecOps challenge",
   "dependencies": {
     "express": "^4.21.2",
     "prom-client": "^15.1.3"

@@ -4,6 +4,15 @@
 
 A lightweight Node.js application. It features basic web endpoints, Prometheus metrics integration, and is designed for Kubernetes deployment and CI/CD pipeline demonstrations.
 
+## Quick start
+
+```bash
+git clone https://github.com/IdoShoshani/sample-nodejs.git && cd sample-nodejs
+npm ci && npm test                                         # lint + 4 route tests
+docker build -t sample-nodejs:dev . && \
+  docker run --rm -p 8080:8080 sample-nodejs:dev           # http://localhost:8080/my-app
+```
+
 ## Features
 
 - Express.js web server
