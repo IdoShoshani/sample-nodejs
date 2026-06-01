@@ -1,3 +1,13 @@
+# CI/CD pipeline for sample-nodejs.
+#
+# Image tag scheme: <package.json#version>-<GITHUB_RUN_NUMBER>
+#   - Bump `version` in package.json manually for minor/major releases.
+#   - The CI run number is a monotonically increasing build counter.
+#   - Each `main` build creates a Docker Hub tag and a matching git tag `v<tag>`.
+#
+# Action-pinning policy:
+#   - Default: pin to major tag (e.g. @v4) for low maintenance.
+#   - Security-sensitive credential handler (`docker/login-action`) is SHA-pinned.
 name: CI/CD
 
 on:
@@ -9,9 +19,16 @@ on:
 permissions:
   contents: read
 
+# Cancel superseded PR builds; never cancel `main` releases mid-flight (a half-pushed image
+# would leak an unscanned digest and confuse the GitOps promote step).
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,6 +41,7 @@ jobs:
 
   sast:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     container:
       image: semgrep/semgrep:latest
     steps:
@@ -35,6 +53,7 @@ jobs:
     needs: [test, sast]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: write
     outputs:
@@ -66,7 +85,8 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        # SHA-pinned: handles credentials, highest-trust action in the pipeline.
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9  # v3 latest
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -81,6 +101,7 @@ jobs:
     needs: release
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout GitOps repo
         uses: actions/checkout@v4
@@ -93,6 +114,8 @@ jobs:
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
       - name: Bump image tag
+        # NOTE: `yq -i` reflows the YAML (strips blank lines and reformats). Keep long-form
+        # documentation in the file header where yq leaves it alone.
         env:
           TAG: ${{ needs.release.outputs.image_tag }}
         run: |
