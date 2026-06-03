@@ -4,6 +4,10 @@ A tiny Node.js + Express service used as the deploy target for a full DevSecOps 
 
 ## Architecture
 
+![ArgoCD diagram](docs/images/argocd.png)
+
+![Hello world diagram](docs/images/hello-world.png)
+
 ```mermaid
 flowchart LR
   dev([developer])
@@ -46,12 +50,12 @@ docker run --rm -p 8080:8080 sample-nodejs:dev
 
 ## Pipeline at a glance
 
-| Job        | Runs on         | What it does                                                                       |
-|------------|-----------------|------------------------------------------------------------------------------------|
-| `test`     | every PR + main | `npm ci`, ESLint, `node --test` (4 route tests)                                    |
-| `sast`     | every PR + main | Semgrep `--config=auto --error --severity=ERROR`                                   |
-| `release`  | main only       | Build · **Trivy block HIGH/CRITICAL** · push to Docker Hub · git tag `v<tag>`     |
-| `promote`  | main only       | `yq` bump `image.tag` in the GitOps repo · commit as `ci-bot`                      |
+| Job       | Runs on         | What it does                                                                  |
+| --------- | --------------- | ----------------------------------------------------------------------------- |
+| `test`    | every PR + main | `npm ci`, ESLint, `node --test` (4 route tests)                               |
+| `sast`    | every PR + main | Semgrep `--config=auto --error --severity=ERROR`                              |
+| `release` | main only       | Build · **Trivy block HIGH/CRITICAL** · push to Docker Hub · git tag `v<tag>` |
+| `promote` | main only       | `yq` bump `image.tag` in the GitOps repo · commit as `ci-bot`                 |
 
 - **Image tag scheme:** `<package.json#version>-<CI run number>`. Bump `version` in `package.json` for a minor/major release.
 - **Failure modes:** SAST or Trivy block the merge before the image is pushed; if `promote` fails, the image exists on Docker Hub but the cluster doesn't move until a re-run.
@@ -60,11 +64,11 @@ docker run --rm -p 8080:8080 sample-nodejs:dev
 
 Fork both repos and set three secrets on the app fork:
 
-| Secret                | Value                                                                  | Used by    |
-|-----------------------|------------------------------------------------------------------------|------------|
-| `DOCKERHUB_USERNAME`  | Docker Hub login name                                                  | `release`  |
-| `DOCKERHUB_TOKEN`     | Docker Hub access token (Read/Write)                                   | `release`  |
-| `GITOPS_PAT`          | Fine-grained PAT on the GitOps repo, **Contents: Read & write**         | `promote`  |
+| Secret               | Value                                                           | Used by   |
+| -------------------- | --------------------------------------------------------------- | --------- |
+| `DOCKERHUB_USERNAME` | Docker Hub login name                                           | `release` |
+| `DOCKERHUB_TOKEN`    | Docker Hub access token (Read/Write)                            | `release` |
+| `GITOPS_PAT`         | Fine-grained PAT on the GitOps repo, **Contents: Read & write** | `promote` |
 
 Replace the `idoshoshani123/sample-nodejs` image name in `.github/workflows/ci.yml` with your own. Cluster bring-up (ArgoCD install, repo registration, host mapping) lives in the [GitOps repo README](https://github.com/IdoShoshani/devops-challenge-gitops#readme).
 
